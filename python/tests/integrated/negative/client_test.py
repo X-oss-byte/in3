@@ -20,21 +20,21 @@ class ClientNegativeTest(unittest.TestCase):
         pass
 
     def test_ens_owner(self):
-        for i in range(50):
+        for _ in range(50):
             with self.assertRaises(in3.ClientException):
                 self.client.ens_owner('depraz.eth', '')
             with self.assertRaises(in3.ClientException):
                 self.client.ens_owner('deprazz.eth')
 
     def test_ens_resolver(self):
-        for i in range(50):
+        for _ in range(50):
             with self.assertRaises(in3.ClientException):
                 self.client.ens_resolver('depraz.eth', '')
             with self.assertRaises(in3.ClientException):
                 self.client.ens_owner('deprazz.eth')
 
     def test_ens_address(self):
-        for i in range(50):
+        for _ in range(50):
             with self.assertRaises(in3.ClientException):
                 self.client.ens_address('depraz.eth', '')
             with self.assertRaises(in3.ClientException):

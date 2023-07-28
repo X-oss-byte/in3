@@ -33,7 +33,7 @@ class SubstitutionError(Exception):
     self.key = key
 
   def __str__(self):
-    return "SubstitutionError: {}".format(self.key)
+    return f"SubstitutionError: {self.key}"
 
 
 def InterpolateString(value, substitutions):

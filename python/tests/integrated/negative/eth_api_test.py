@@ -16,7 +16,7 @@ class EthereumNegativeTest(unittest.TestCase):
                                  test_instance=True)
 
     def test_get_block_by_number_client(self):
-        for i in range(50):
+        for _ in range(50):
             with self.assertRaises(in3.ClientException):
                 self.client.eth.block_by_number(9937219)
             with self.assertRaises(in3.ClientException):
@@ -26,7 +26,7 @@ class EthereumNegativeTest(unittest.TestCase):
         tx_bad_hash = '0xTe25a4b673bd87f40ea147a5506cb2ffb38e32ec1efc372c6730a5ba50668aeP'
         tx_wrong_hash = '0xTe25a4b673bd87f40ea147a5506cb2ffb38e32ec1efc372c6730a5ba50668aeb'
         tx_evil_hash = '0xa™a4b673bd87f40ea147a5506cb2ffb38e32ec1efc372c6730a5ba50668aeP'
-        for i in range(20):
+        for _ in range(20):
             with self.assertRaises(in3.ClientException):
                 self.client.eth.transaction_by_hash(tx_bad_hash)
             with self.assertRaises(in3.ClientException):
@@ -38,7 +38,7 @@ class EthereumNegativeTest(unittest.TestCase):
         tx_bad_hash = '0xb13b9d38642216af2545f1b9f882413bcdef13bec21def57c699d3a967d763bP'
         tx_wrong_hash = '0xb13b9d38642216af2545f1b9f882413bcdef13bec21def57c699d3a967d763bb'
         tx_evil_hash = '0xa™a4b673bd87f40ea147a5506cb2ffb38e32ec1efc372c6730a5ba50668aeP'
-        for i in range(20):
+        for _ in range(20):
             with self.assertRaises(in3.ClientException):
                 self.client.eth.transaction_receipt(tx_bad_hash)
             with self.assertRaises(in3.ClientException):

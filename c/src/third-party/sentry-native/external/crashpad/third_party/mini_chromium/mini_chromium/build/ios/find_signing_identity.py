@@ -31,8 +31,8 @@ def FindValidIdentity(identity_description):
     res = exp.match(line)
     if res is None:
       continue
-    if identity_description in res.group(2):
-      yield res.group(1)
+    if identity_description in res[2]:
+      yield res[1]
 
 
 if __name__ == '__main__':

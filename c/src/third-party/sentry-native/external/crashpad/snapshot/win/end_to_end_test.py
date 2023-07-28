@@ -82,8 +82,7 @@ def GetCdbPath():
     )
     for possible_path in possible_paths:
         app_path = os.path.join(possible_path, 'cdb.exe')
-        app_path = FindInstalledWindowsApplication(app_path)
-        if app_path:
+        if app_path := FindInstalledWindowsApplication(app_path):
             return app_path
     return None
 
@@ -124,16 +123,22 @@ def GetDumpFromProgram(out_dir, pipe_name, executable_name, expect_exit_code,
     handler = None
 
     try:
-        subprocess.check_call([
-            os.path.join(out_dir, 'crashpad_database_util.exe'), '--create',
-            '--database=' + test_database
-        ])
+        subprocess.check_call(
+            [
+                os.path.join(out_dir, 'crashpad_database_util.exe'),
+                '--create',
+                f'--database={test_database}',
+            ]
+        )
 
         if pipe_name is not None:
-            handler = subprocess.Popen([
-                os.path.join(out_dir, 'crashpad_handler.com'),
-                '--pipe-name=' + pipe_name, '--database=' + test_database
-            ])
+            handler = subprocess.Popen(
+                [
+                    os.path.join(out_dir, 'crashpad_handler.com'),
+                    f'--pipe-name={pipe_name}',
+                    f'--database={test_database}',
+                ]
+            )
 
             # Wait until the server is ready.
             printed = False
@@ -150,17 +155,19 @@ def GetDumpFromProgram(out_dir, pipe_name, executable_name, expect_exit_code,
                 os.path.join(out_dir, executable_name),
                 os.path.join(out_dir, 'crashpad_handler.com'), test_database
             ] + list(args))
-        print('Running %s' % os.path.basename(command[0]))
+        print(f'Running {os.path.basename(command[0])}')
         exit_code = subprocess.call(command)
         if exit_code != expect_exit_code:
             raise subprocess.CalledProcessError(exit_code, executable_name)
 
-        out = subprocess.check_output([
-            os.path.join(out_dir, 'crashpad_database_util.exe'),
-            '--database=' + test_database,
-            '--show-pending-reports',
-            '--show-all-report-info',
-        ])
+        out = subprocess.check_output(
+            [
+                os.path.join(out_dir, 'crashpad_database_util.exe'),
+                f'--database={test_database}',
+                '--show-pending-reports',
+                '--show-all-report-info',
+            ]
+        )
         for line in out.splitlines():
             if line.strip().startswith('Path:'):
                 return line.partition(':')[2].strip()
@@ -205,18 +212,18 @@ class CdbRun(object):
         # Run a command line that loads the dump, runs the specified cdb
         # command, and then quits, and capturing stdout.
         self.out = subprocess.check_output(
-            [cdb_path, '-z', dump_path, '-c', command + ';q'])
+            [cdb_path, '-z', dump_path, '-c', f'{command};q']
+        )
 
     def Check(self, pattern, message, re_flags=0):
-        match_obj = re.search(pattern, self.out, re_flags)
-        if match_obj:
+        if match_obj := re.search(pattern, self.out, re_flags):
             # Matched. Consume up to end of match.
             self.out = self.out[match_obj.end(0):]
-            print('ok - %s' % message)
+            print(f'ok - {message}')
             sys.stdout.flush()
         else:
             print('-' * 80, file=sys.stderr)
-            print('FAILED - %s' % message, file=sys.stderr)
+            print(f'FAILED - {message}', file=sys.stderr)
             print('-' * 80, file=sys.stderr)
             print('did not match:\n  %s' % pattern, file=sys.stderr)
             print('-' * 80, file=sys.stderr)
@@ -227,8 +234,7 @@ class CdbRun(object):
             g_had_failures = True
 
     def Find(self, pattern, re_flags=0):
-        match_obj = re.search(pattern, self.out, re_flags)
-        if match_obj:
+        if match_obj := re.search(pattern, self.out, re_flags):
             # Matched. Consume up to end of match.
             self.out = self.out[match_obj.end(0):]
             return match_obj
@@ -293,17 +299,6 @@ def RunTests(cdb_path, dump_path, start_handler_dump_path, destroyed_dump_path,
         'LastStatusValue: \(NTSTATUS\) 0xc000000f - {File Not Found}  The '
         'file %hs does not exist.', '!gle gets last ntstatus')
 
-    if False:
-        # TODO(scottmg): Re-enable when we grab ntdll!RtlCriticalSectionList.
-        out = CdbRun(cdb_path, dump_path, '!locks')
-        out.Check(
-            r'CritSec crashy_program!crashpad::`anonymous namespace\'::'
-            r'g_test_critical_section', 'lock was captured')
-        if platform.win32_ver()[0] != '7':
-            # We can't allocate CRITICAL_SECTIONs with .DebugInfo on Win 7.
-            out.Check(r'\*\*\* Locked',
-                      'lock debug info was captured, and is locked')
-
     out = CdbRun(cdb_path, dump_path, '!handle')
     out.Check(r'\d+ Handles', 'captured handles')
     out.Check(r'Event\s+\d+', 'capture some event handles')
@@ -333,10 +328,9 @@ def RunTests(cdb_path, dump_path, start_handler_dump_path, destroyed_dump_path,
     # threads, so first do a run to extract the thread index that's suspended,
     # and then another run to dump the data pointed to by EDI for that thread.
     out = CdbRun(cdb_path, dump_path, '.ecxr;~')
-    match_obj = out.Find(r'(\d+)\s+Id: [0-9a-f.]+ Suspend: 1 Teb:')
-    if match_obj:
+    if match_obj := out.Find(r'(\d+)\s+Id: [0-9a-f.]+ Suspend: 1 Teb:'):
         thread = match_obj.group(1)
-        out = CdbRun(cdb_path, dump_path, '.ecxr;~' + thread + 's;db /c14 edi')
+        out = CdbRun(cdb_path, dump_path, f'.ecxr;~{thread}s;db /c14 edi')
     out.Check(r'63 62 61 60 5f 5e 5d 5c-5b 5a 59 58 57 56 55 54 53 52 51 50',
               'data pointed to by registers captured')
 
@@ -384,14 +378,12 @@ def RunTests(cdb_path, dump_path, start_handler_dump_path, destroyed_dump_path,
               'other program dump right thread')
     count = 0
     while True:
-        match_obj = out.Find(r'Id.*Suspend: (\d+) ')
-        if match_obj:
-            if match_obj.group(1) != '0':
-                out.Check(r'FAILED', 'all suspend counts should be 0')
-            else:
-                count += 1
-        else:
+        if not (match_obj := out.Find(r'Id.*Suspend: (\d+) ')):
             break
+        if match_obj.group(1) != '0':
+            out.Check(r'FAILED', 'all suspend counts should be 0')
+        else:
+            count += 1
     assert count > 2
 
     out = CdbRun(cdb_path, other_program_no_exception_path, '.ecxr;k')
@@ -422,9 +414,9 @@ def main(args):
         if not os.environ.get('_NT_SYMBOL_PATH'):
             symbol_dir = MakeTempDir()
             protocol = 'https' if platform.win32_ver()[0] != 'XP' else 'http'
-            os.environ['_NT_SYMBOL_PATH'] = (
-                'SRV*' + symbol_dir + '*' + protocol +
-                '://msdl.microsoft.com/download/symbols')
+            os.environ[
+                '_NT_SYMBOL_PATH'
+            ] = f'SRV*{symbol_dir}*{protocol}://msdl.microsoft.com/download/symbols'
 
         pipe_name = r'\\.\pipe\end-to-end_%s_%s' % (os.getpid(),
                                                     str(random.getrandbits(64)))

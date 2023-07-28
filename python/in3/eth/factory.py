@@ -26,9 +26,7 @@ class EthObjectFactory:
         return result
 
     def get_integer(self, hex_str: str) -> int:
-        if hex_str == "0x":
-            return 0
-        return int(hex_str, 16)
+        return 0 if hex_str == "0x" else int(hex_str, 16)
 
     def get_block(self, serialized: dict):
         mapping = {

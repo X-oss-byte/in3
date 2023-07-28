@@ -1,6 +1,7 @@
 """
 Shows Incubed Network Nodes Stats
 """
+
 import in3
 
 if __name__ == '__main__':
@@ -22,7 +23,7 @@ if __name__ == '__main__':
             print('\tregistered in block:', node.registerTime)
             print('\n')
     except in3.ClientException as e:
-        print('Network might be unstable, try again later.\n Reason: ', str(e))
+        print('Network might be unstable, try again later.\n Reason: ', e)
 
 # Produces
 """

@@ -124,8 +124,9 @@ class ProvisioningProfile(object):
       with the corresponding bundle_identifier, False otherwise.
     """
     return fnmatch.fnmatch(
-        '%s.%s' % (self.team_identifier, bundle_identifier),
-        self.application_identifier_pattern)
+        f'{self.team_identifier}.{bundle_identifier}',
+        self.application_identifier_pattern,
+    )
 
   def Install(self, installation_path):
     """Copies mobile provisioning profile info to |installation_path|."""
@@ -150,7 +151,7 @@ class Entitlements(object):
   def _ExpandVariables(self, data, substitutions):
     if isinstance(data, str):
       for key, substitution in substitutions.iteritems():
-        data = data.replace('$(%s)' % (key,), substitution)
+        data = data.replace(f'$({key})', substitution)
       return data
 
     if isinstance(data, dict):
@@ -219,8 +220,8 @@ def FindProvisioningProfile(bundle_identifier, required):
   one_week = datetime.timedelta(7)
   if selected_provisioning_profile.expiration_date - now < 2 * one_week:
     sys.stderr.write(
-        'Warning: selected provisioning profile will expire soon: %s' %
-        selected_provisioning_profile.path)
+        f'Warning: selected provisioning profile will expire soon: {selected_provisioning_profile.path}'
+    )
   return selected_provisioning_profile
 
 
@@ -268,7 +269,7 @@ def GenerateEntitlements(path, provisioning_profile, bundle_identifier):
   entitlements = Entitlements(path)
   if provisioning_profile:
     entitlements.LoadDefaults(provisioning_profile.entitlements)
-    app_identifier_prefix = provisioning_profile.team_identifier + '.'
+    app_identifier_prefix = f'{provisioning_profile.team_identifier}.'
   else:
     app_identifier_prefix = '*.'
   entitlements.ExpandVariables({
@@ -293,8 +294,7 @@ def GenerateBundleInfoPlist(bundle_path, plist_compiler, partial_plist):
   # just a stamp file).
   filtered_partial_plist = []
   for plist in partial_plist:
-    plist_size = os.stat(plist).st_size
-    if plist_size:
+    if plist_size := os.stat(plist).st_size:
       filtered_partial_plist.append(plist)
 
   # Invoke the plist_compiler script. It needs to be a python script.
@@ -383,11 +383,10 @@ class CodeSignBundleAction(Action):
     # Apple documentation is available at:
     # https://developer.apple.com/library/content/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html
     bundle_name = os.path.splitext(os.path.basename(bundle.path))[0]
-    errors = bundle.Validate({
+    if errors := bundle.Validate({
         'CFBundleName': bundle_name,
         'CFBundleExecutable': bundle_name,
-    })
-    if errors:
+    }):
       for key in sorted(errors):
         value, expected_value = errors[key]
         sys.stderr.write('%s: error: %s value incorrect: %s != %s\n' % (
@@ -432,7 +431,7 @@ class CodeSignBundleAction(Action):
 
         if args.entitlements_path is not None:
           temporary_entitlements_file = \
-              tempfile.NamedTemporaryFile(suffix='.xcent')
+                tempfile.NamedTemporaryFile(suffix='.xcent')
           codesign_extra_args.extend(
               ['--entitlements', temporary_entitlements_file.name])
 

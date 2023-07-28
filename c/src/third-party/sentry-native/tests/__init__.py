@@ -14,13 +14,13 @@ pytest.register_assert_rewrite("tests.assertions")
 
 
 def make_dsn(httpserver, auth="uiaeosnrtdy", id=123456):
-    url = urllib.parse.urlsplit(httpserver.url_for("/{}".format(id)))
+    url = urllib.parse.urlsplit(httpserver.url_for(f"/{id}"))
     # We explicitly use `127.0.0.1` here, because on Windows, `localhost` will
     # first try `::1` (the ipv6 loopback), retry a couple times and give up
     # after a timeout of 2 seconds, falling back to the ipv4 loopback instead.
     host = url.netloc.replace("localhost", "127.0.0.1")
     return urllib.parse.urlunsplit(
-        (url.scheme, "{}@{}".format(auth, host), url.path, url.query, url.fragment,)
+        (url.scheme, f"{auth}@{host}", url.path, url.query, url.fragment)
     )
 
 
@@ -33,18 +33,9 @@ def run(cwd, exe, args, env=dict(os.environ), **kwargs):
         kwargs["stdout"] = subprocess.PIPE
         child = subprocess.run(
             [
-                "{}/platform-tools/adb".format(os.environ["ANDROID_HOME"]),
+                f'{os.environ["ANDROID_HOME"]}/platform-tools/adb',
                 "shell",
-                # Android by default only searches for libraries in system
-                # directories and the app directory, and only supports RUNPATH
-                # since API-24.
-                # Since we are no "app" in that sense, we can use
-                # `LD_LIBRARY_PATH` to force the android dynamic loader to
-                # load `libsentry.so` from the correct library.
-                # See https://android.googlesource.com/platform/bionic/+/master/android-changes-for-ndk-developers.md#dt_runpath-support-available-in-api-level-24
-                "cd /data/local/tmp && LD_LIBRARY_PATH=. ./{} {}; echo -n ret:$?".format(
-                    exe, " ".join(args)
-                ),
+                f'cd /data/local/tmp && LD_LIBRARY_PATH=. ./{exe} {" ".join(args)}; echo -n ret:$?',
             ],
             **kwargs,
         )
@@ -59,14 +50,12 @@ def run(cwd, exe, args, env=dict(os.environ), **kwargs):
             )
         return child
 
-    cmd = [
-        "./{}".format(exe) if sys.platform != "win32" else "{}\\{}.exe".format(cwd, exe)
-    ]
+    cmd = [f"./{exe}" if sys.platform != "win32" else f"{cwd}\\{exe}.exe"]
     if "asan" in os.environ.get("RUN_ANALYZER", ""):
         env["ASAN_OPTIONS"] = "detect_leaks=1"
-        env["LSAN_OPTIONS"] = "suppressions={}".format(
-            os.path.join(sourcedir, "tests", "leaks.txt")
-        )
+        env[
+            "LSAN_OPTIONS"
+        ] = f'suppressions={os.path.join(sourcedir, "tests", "leaks.txt")}'
     if "llvm-cov" in os.environ.get("RUN_ANALYZER", ""):
         # continuous mode is only supported on mac right now
         continuous = "%c" if sys.platform == "darwin" else ""
@@ -75,7 +64,7 @@ def run(cwd, exe, args, env=dict(os.environ), **kwargs):
         coverage_dir = os.path.join(cwd, "coverage")
         cmd = [
             "kcov",
-            "--include-path={}".format(os.path.join(sourcedir, "src")),
+            f'--include-path={os.path.join(sourcedir, "src")}',
             coverage_dir,
             *cmd,
         ]
@@ -112,10 +101,7 @@ class Envelope(object):
         if headers is not None:
             headers = dict(headers)
         self.headers = headers or {}
-        if items is None:
-            items = []
-        else:
-            items = list(items)
+        items = [] if items is None else list(items)
         self.items = items
 
     def get_event(self):
@@ -177,16 +163,9 @@ class Item(object):
         payload,  # type: Union[bytes, text_type, PayloadRef]
         headers=None,  # type: Optional[Dict[str, str]]
     ):
-        if headers is not None:
-            headers = dict(headers)
-        elif headers is None:
-            headers = {}
+        headers = dict(headers) if headers is not None else {}
         self.headers = headers
-        if isinstance(payload, bytes):
-            payload = PayloadRef(bytes=payload)
-        else:
-            payload = payload
-
+        payload = PayloadRef(bytes=payload) if isinstance(payload, bytes) else payload
         self.payload = payload
 
     def get_event(self):
@@ -206,7 +185,7 @@ class Item(object):
         headers = json.loads(line)
         length = headers["length"]
         payload = f.read(length)
-        if headers.get("type") == "event" or headers.get("type") == "session":
+        if headers.get("type") in ["event", "session"]:
             rv = cls(headers=headers, payload=PayloadRef(json=json.loads(payload)))
         else:
             rv = cls(headers=headers, payload=payload)

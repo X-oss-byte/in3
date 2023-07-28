@@ -2,6 +2,7 @@
 Manually calling the ENS smart-contract
 ![UML Sequence Diagram of how Ethereum Name Service ENS resolves a name.](https://lh5.googleusercontent.com/_OPPzaxTxKggx9HuxloeWtK8ggEfIIBKRCEA6BKMwZdzAfUpIY6cz7NK5CFmiuw7TwknbhFNVRCJsswHLqkxUEJ5KdRzpeNbyg8_H9d2RZdG28kgipT64JyPZUP--bAizozaDcxCq34)
 """
+
 import in3
 
 
@@ -22,14 +23,14 @@ if __name__ == '__main__':
         }
         tx = in3.eth.NewTransaction(**resolver_tx)
     except in3.ClientException as e:
-            print('Something went wrong converting data.\n Reason: ', str(e))
+        print('Something went wrong converting data.\n Reason: ', e)
     try:
         # Make the smart contract call
         print('Calling the ENS registry contract.')
         encoded_resolver_addr = client.eth.contract.call(tx)
         resolver_address = client.eth.contract.decode(ens_resolver_abi, encoded_resolver_addr)
     except in3.ClientException as e:
-        print('Network might be unstable, try again later.\n Reason: ', str(e))
+        print('Network might be unstable, try again later.\n Reason: ', e)
     try:
         # Resolve name
         ens_addr_abi = 'addr(bytes32):address'
@@ -38,16 +39,17 @@ if __name__ == '__main__':
             "data": client.eth.contract.encode(ens_addr_abi, domain_name)
         }
     except in3.ClientException as e:
-        print('Something went wrong converting data.\n Reason: ', str(e))
+        print('Something went wrong converting data.\n Reason: ', e)
     try:
         print('Calling the ENS resolver contract.')
         encoded_domain_address = client.eth.contract.call(in3.eth.NewTransaction(**name_tx))
         domain_address = client.eth.contract.decode(ens_addr_abi, encoded_domain_address)
 
-        print('\nENS domain:\n{}\nResolved by:\n{}\nTo address:\n{}'.format(domain_name, resolver_address,
-                                                                          domain_address))
+        print(
+            f'\nENS domain:\n{domain_name}\nResolved by:\n{resolver_address}\nTo address:\n{domain_address}'
+        )
     except in3.ClientException as e:
-        print('Network might be unstable, try again later.\n Reason: ', str(e))
+        print('Network might be unstable, try again later.\n Reason: ', e)
 
 
 # Produces

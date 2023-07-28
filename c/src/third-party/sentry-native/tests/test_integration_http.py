@@ -174,10 +174,11 @@ def test_abnormal_session(cmake, httpserver):
     envelope1 = Envelope.deserialize(httpserver.log[0][0].get_data())
     envelope2 = Envelope.deserialize(httpserver.log[1][0].get_data())
 
-    session_count = 0
-    for item in itertools.chain(envelope1, envelope2):
-        if item.headers.get("type") == "session":
-            session_count += 1
+    session_count = sum(
+        1
+        for item in itertools.chain(envelope1, envelope2)
+        if item.headers.get("type") == "session"
+    )
     assert session_count == 15
 
     assert_session(envelope1, {"status": "abnormal", "errors": 0, "duration": 10})

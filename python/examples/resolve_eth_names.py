@@ -2,6 +2,7 @@
 Resolves ENS domains to Ethereum addresses
 ENS is a smart-contract system that registers and resolves `.eth` domains.
 """
+
 import in3
 
 
@@ -16,10 +17,10 @@ if __name__ == '__main__':
         print('\nEthereum Name Service')
         address = client.ens_address(domain)
         owner = client.ens_owner(domain)
-        print('\nAddress for {} @ {}: {}'.format(domain, 'mainnet', address))
-        print('Owner for {} @ {}: {}'.format(domain, 'mainnet', owner))
+        print(f'\nAddress for {domain} @ mainnet: {address}')
+        print(f'Owner for {domain} @ mainnet: {owner}')
     except in3.ClientException as e:
-        print('Network might be unstable, try again later.\n Reason: ', str(e))
+        print('Network might be unstable, try again later.\n Reason: ', e)
 
 
 # Produces

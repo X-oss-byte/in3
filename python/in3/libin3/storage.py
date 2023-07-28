@@ -33,7 +33,7 @@ def set_item(_cptr, key, value):
         with open(p.Path(path, key), 'w+b') as file:
             file.write(value)
     except Exception as e:
-        warnings.warn('In3 Cache: error:\n{}\ncleaning cache.'.format(str(e)), RuntimeWarning)
+        warnings.warn(f'In3 Cache: error:\n{str(e)}\ncleaning cache.', RuntimeWarning)
 
 
 @c.CFUNCTYPE(c.c_void_p, c.c_void_p, c.POINTER(c.c_char))
@@ -53,14 +53,13 @@ def get_item(_cptr, key):
         if file_path.exists():
             data = file_path.read_bytes()
     except Exception as e:
-        warnings.warn('In3 Cache: error:\n{}\ncleaning cache.'.format(str(e)), RuntimeWarning)
+        warnings.warn(f'In3 Cache: error:\n{str(e)}\ncleaning cache.', RuntimeWarning)
         clear(None)
         return None
     if not data:
         return None
     from in3.libin3 import rpc_api
-    data_byte_t = rpc_api.libin3_new_bytes_t(data, len(data))
-    return data_byte_t
+    return rpc_api.libin3_new_bytes_t(data, len(data))
 
 
 @c.CFUNCTYPE(None, c.c_void_p)

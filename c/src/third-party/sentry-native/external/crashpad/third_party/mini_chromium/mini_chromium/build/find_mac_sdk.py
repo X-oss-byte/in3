@@ -55,14 +55,13 @@ def _FindPlatformSDKWithMinimumVersion(platform, minimum_sdk_version_str):
     # format used to identify each SDK.
     sdk_version_strs = []
     for line in xcodebuild_showsdks_output.splitlines():
-      match = re.match('[ \t].+[ \t]-sdk ' + re.escape(platform) + '(.+)$',
-                       line)
-      if match:
-        sdk_version_str = match.group(1)
+      if match := re.match('[ \t].+[ \t]-sdk ' + re.escape(platform) + '(.+)$',
+                           line):
+        sdk_version_str = match[1]
         if _AsVersion(sdk_version_str) >= minimum_sdk_version:
           sdk_version_strs.append(sdk_version_str)
 
-    if len(sdk_version_strs) == 0:
+    if not sdk_version_strs:
       raise DidNotMeetCriteria({'minimum': minimum_sdk_version_str,
                                 'platform': platform})
     sdk_version_str = sorted(sdk_version_strs, key=_AsVersion)[0]

@@ -17,11 +17,10 @@ class EthAccountApi:
         self._factory = factory
 
     def _create_account(self, secret: str) -> Account:
-        if not secret.startswith('0x') or not len(secret) == 66:
+        if not secret.startswith('0x') or len(secret) != 66:
             TypeError('Secret must be a 256 bit hexadecimal.')
         address = self._runtime.call(In3Methods.PK_2_ADDRESS, secret)
-        account = self._factory.get_account(address, int(secret, 16))
-        return account
+        return self._factory.get_account(address, int(secret, 16))
 
     def create(self, qrng=False) -> Account:
         """
@@ -44,7 +43,7 @@ class EthAccountApi:
         Returns:
             account (Account): Recovered Ethereum account.
         """
-        if not secret or not len(secret) == 66:
+        if not secret or len(secret) != 66:
             raise PrivateKeyNotFoundException('Please provide account secret.')
         return self._create_account(secret)
 
@@ -103,7 +102,7 @@ class EthAccountApi:
         """
         assert isinstance(transaction, NewTransaction)
         assert isinstance(sender, Account)
-        if not sender.secret or not len(hex(sender.secret)) == 66:
+        if not sender.secret or len(hex(sender.secret)) != 66:
             raise AssertionError('To send a transaction, the sender\'s secret must be known by the application. \
             To send a pre-signed transaction use `send_raw_transaction` instead.')
         transaction.From = sender.address

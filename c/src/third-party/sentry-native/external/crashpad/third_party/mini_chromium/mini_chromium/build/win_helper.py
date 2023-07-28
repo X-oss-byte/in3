@@ -32,6 +32,7 @@ def _RegistryGetValue(key, value):
 def _ExtractImportantEnvironment(output_of_set):
   """Extracts environment variables required for the toolchain to run from
   a textual dump output by the cmd.exe 'set' command."""
+  env = {}
   envvars_to_save = (
       'include',
       'lib',
@@ -41,18 +42,18 @@ def _ExtractImportantEnvironment(output_of_set):
       'systemroot',
       'temp',
       'tmp',
-      )
-  env = {}
+  )
   for line in output_of_set.splitlines():
     for envvar in envvars_to_save:
-      if re.match(envvar + '=', line.lower()):
+      if re.match(f'{envvar}=', line.lower()):
         var, setting = line.split('=', 1)
         env[var.upper()] = setting
         break
   for required in ('SYSTEMROOT', 'TEMP', 'TMP'):
     if required not in env:
-      raise Exception('Environment variable "%s" '
-                      'required to be set to valid path' % required)
+      raise Exception(
+          f'Environment variable "{required}" required to be set to valid path'
+      )
   return env
 
 
@@ -60,12 +61,9 @@ def _FormatAsEnvironmentBlock(envvar_dict):
   """Format as an 'environment block' directly suitable for CreateProcess.
   Briefly this is a list of key=value\0, terminated by an additional \0. See
   CreateProcess() documentation for more details."""
-  block = ''
   nul = '\0'
-  for key, value in envvar_dict.iteritems():
-    block += key + '=' + value + nul
-  block += nul
-  return block
+  return (''.join(f'{key}={value}{nul}'
+                  for key, value in envvar_dict.iteritems()) + nul)
 
 
 def _GenerateEnvironmentFiles(install_dir, out_dir, script_path):
@@ -97,7 +95,7 @@ def _GenerateEnvironmentFiles(install_dir, out_dir, script_path):
     env = _ExtractImportantEnvironment(variables)
 
     env_block = _FormatAsEnvironmentBlock(env)
-    basename = 'environment.' + arch
+    basename = f'environment.{arch}'
     with open(os.path.join(out_dir, basename), 'wb') as f:
       f.write(env_block)
     result.append(basename)
@@ -121,7 +119,7 @@ class WinTool(object):
     if len(args) < 1:
       raise Exception("Not enough arguments")
 
-    method = "Exec%s" % self._CommandifyName(args[0])
+    method = f"Exec{self._CommandifyName(args[0])}"
     return getattr(self, method)(*args[1:])
 
   def _CommandifyName(self, name_string):

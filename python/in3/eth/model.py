@@ -11,7 +11,7 @@ class DataTransferObject:
         dictionary = {k: v for k, v in self.__dict__.items() if v is not None}
         if int_to_hex:
             integers = {k: hex(v) for k, v in dictionary.items() if isinstance(v, int)}
-            dictionary.update(integers)
+            dictionary |= integers
         return dictionary
 
     def serialize(self) -> str:

@@ -60,7 +60,7 @@ def _load_shared_library() -> c.CDLL:
     try:
         return platform_selector('libin3', path)
     except OSError:
-        return fallback_platform_selector(str(path) + '/*')
+        return fallback_platform_selector(f'{str(path)}/*')
 
 
 _libin3 = _load_shared_library()

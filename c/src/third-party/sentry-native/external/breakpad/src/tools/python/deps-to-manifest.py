@@ -112,7 +112,7 @@ def ConvertDepsToManifest(deps, manifest):
         remote = name
         break
     else:
-      raise ValueError('Unknown DEPS remote: %s: %s' % (path, url))
+      raise ValueError(f'Unknown DEPS remote: {path}: {url}')
 
     # The DEPS url will look like:
     # https://chromium.googlesource.com/external/gyp/@e8ab0833a42691cd2
@@ -121,7 +121,7 @@ def ConvertDepsToManifest(deps, manifest):
 
     # If it's not a revision, assume it's a tag.  Repo wants full ref names.
     if len(rev) != 40:
-      rev = 'refs/tags/%s' % rev
+      rev = f'refs/tags/{rev}'
 
     data = {
         'path': path,
@@ -141,7 +141,7 @@ def ConvertDepsToManifest(deps, manifest):
     # In case the file doesn't exist yet.
     old_contents = ''
   if old_contents != new_contents:
-    print('Updating %s due to changed %s' % (manifest, deps))
+    print(f'Updating {manifest} due to changed {deps}')
     with open(manifest, 'w') as fp:
       fp.write(new_contents)
 

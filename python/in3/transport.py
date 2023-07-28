@@ -33,8 +33,8 @@ def https_transport(in3_request: In3Request, in3_response: In3Response):
             request = urllib.request.Request(**request_params)
             timeout = 180000
             with urllib.request.urlopen(request, timeout=timeout) as response:
-                if not response.status == 200:
-                    raise TransportException('Request failed with status: {}'.format(str(response.status)))
+                if response.status != 200:
+                    raise TransportException(f'Request failed with status: {str(response.status)}')
                 msg = response.read()
                 in3_response.success(i, msg)
         except Exception as err:

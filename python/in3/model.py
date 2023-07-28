@@ -145,38 +145,38 @@ class ChainConfig:
 
 chain_configs = {
     "mainnet": ChainConfig(
-        chain_id=int(0x1),
+        chain_id=1,
         chain_id_alias="mainnet",
         client_config=ClientConfig(
             chain_finality_threshold=10,
             latest_block_stall=10,
-            node_signatures=2)
+            node_signatures=2,
+        ),
     ),
     "goerli": ChainConfig(
-        chain_id=int(0x5),
+        chain_id=5,
         chain_id_alias="goerli",
         client_config=ClientConfig(
-            chain_finality_threshold=1,
-            latest_block_stall=6,
-            node_signatures=2)
+            chain_finality_threshold=1, latest_block_stall=6, node_signatures=2
+        ),
     ),
     "ipfs": ChainConfig(
-        chain_id=int(0x7d0),
+        chain_id=2000,
         chain_id_alias="ipfs",
         client_config=ClientConfig(
             chain_finality_threshold=1,
             latest_block_stall=5,
             node_signatures=1,
-            node_signature_consensus=1
-        )
+            node_signature_consensus=1,
+        ),
     ),
     "ewc": ChainConfig(
-        chain_id=int(0xf6),
+        chain_id=246,
         chain_id_alias="ewc",
         client_config=ClientConfig(
             chain_finality_threshold=1,
             latest_block_stall=6,
             node_signatures=2,
-        )
+        ),
     ),
 }

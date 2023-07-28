@@ -3,6 +3,7 @@ Sends Ethereum transactions using Incubed.
 Incubed send Transaction does all necessary automation to make sending a transaction a breeze.
 Works with included `data` field for smart-contract calls.
 """
+
 import json
 import in3
 import time
@@ -32,27 +33,31 @@ if __name__ == '__main__':
         print('-= Ethereum Transaction using Incubed =- \n')
         sender = client.eth.account.recover(sender_secret)
         tx = in3.eth.NewTransaction(to=receiver, value=value_in_wei)
-        print('[.] Sending {} Wei from {} to {}. Please wait.\n'.format(tx.value, sender.address, tx.to))
+        print(
+            f'[.] Sending {tx.value} Wei from {sender.address} to {tx.to}. Please wait.\n'
+        )
         tx_hash = client.eth.account.send_transaction(sender, tx)
-        print('[.] Transaction accepted with hash {}.'.format(tx_hash))
+        print(f'[.] Transaction accepted with hash {tx_hash}.')
         add_dot_if_chain = '.' if chain else ''
         print(etherscan_link_mask.format(chain, add_dot_if_chain, tx_hash))
         while True:
             try:
-                print('\n[.] Waiting {} seconds for confirmation.\n'.format(confirmation_wait_time_in_seconds))
+                print(
+                    f'\n[.] Waiting {confirmation_wait_time_in_seconds} seconds for confirmation.\n'
+                )
                 time.sleep(confirmation_wait_time_in_seconds)
                 receipt: in3.eth.TransactionReceipt = client.eth.transaction_receipt(tx_hash)
                 print('[.] Transaction was sent successfully!\n')
                 print(json.dumps(receipt.to_dict(), indent=4, sort_keys=True))
-                print('[.] Mined on block {} used {} GWei.'.format(receipt.blockNumber, receipt.gasUsed))
+                print(f'[.] Mined on block {receipt.blockNumber} used {receipt.gasUsed} GWei.')
                 break
             except Exception:
                 print('[!] Transaction not mined yet, check https://etherscan.io/gasTracker.')
                 print('[!] Just wait some minutes longer than the average for the price paid!')
     except in3.PrivateKeyNotFoundException as e:
-        print(str(e))
+        print(e)
     except in3.ClientException as e:
-        print('Client returned error: ', str(e))
+        print('Client returned error: ', e)
         print('Please try again.')
 
 # Response

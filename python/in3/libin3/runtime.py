@@ -22,7 +22,7 @@ class RPCCallRequest:
         self.fn_name = str(fn_name).encode('utf8')
         if fn_args and formatted:
             self.fn_args = fn_args[0].encode('utf8')
-        elif fn_args and not formatted:
+        elif fn_args:
             self.fn_args = json.dumps(list(fn_args)).replace('\'', '').encode('utf8')
         else:
             self.fn_args = '[]'.encode('utf8')
@@ -63,7 +63,7 @@ class In3Runtime:
         request = RPCCallRequest(fn_name, fn_args, formatted)
         result, response, error = libin3_call(self.in3, request.fn_name, request.fn_args)
         in3_code = RPCCode(result)
-        if not in3_code == RPCCode.IN3_OK or error:
+        if in3_code != RPCCode.IN3_OK or error:
             raise ClientException(str(error))
         return json.loads(response)
 

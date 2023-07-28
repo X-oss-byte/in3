@@ -11,9 +11,8 @@ def enumerate_unittests():
     curdir = os.path.dirname(os.path.realpath(__file__))
     with open(os.path.join(curdir, "unit/tests.inc"), "r") as testsfile:
         for line in testsfile:
-            match = regexp.match(line)
-            if match:
-                yield match.group(1)
+            if match := regexp.match(line):
+                yield match[1]
 
 
 def pytest_generate_tests(metafunc):

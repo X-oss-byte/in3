@@ -49,11 +49,7 @@ def test_multi_process(cmake):
     cwd = tmp_path.joinpath("unicode ❤️ Юля")
     cwd.mkdir()
     exe = "sentry_example"
-    cmd = (
-        "../{}".format(exe)
-        if sys.platform != "win32"
-        else "{}\\{}.exe".format(tmp_path, exe)
-    )
+    cmd = f"../{exe}" if sys.platform != "win32" else f"{tmp_path}\\{exe}.exe"
 
     child1 = subprocess.Popen([cmd, "sleep"], cwd=cwd)
     child2 = subprocess.Popen([cmd, "sleep"], cwd=cwd)
@@ -81,7 +77,7 @@ def test_multi_process(cmake):
         for run in os.listdir(os.path.join(cwd, ".sentry-native"))
         if run.endswith(".run") or run.endswith(".lock")
     ]
-    assert len(runs) == 0
+    assert not runs
 
 
 @pytest.mark.skipif(not has_inproc, reason="test needs inproc backend")
@@ -99,7 +95,7 @@ def test_inproc_crash_stdout(cmake):
     # The crash file should survive a `sentry_init` and should still be there
     # even after restarts.
     if has_files:
-        with open("{}/.sentry-native/last_crash".format(tmp_path)) as f:
+        with open(f"{tmp_path}/.sentry-native/last_crash") as f:
             crash_timestamp = f.read()
         assert_timestamp(crash_timestamp)
 
@@ -119,7 +115,7 @@ def test_breakpad_crash_stdout(cmake):
     child = run(tmp_path, "sentry_example", ["attachment", "crash"])
     assert child.returncode  # well, its a crash after all
 
-    with open("{}/.sentry-native/last_crash".format(tmp_path)) as f:
+    with open(f"{tmp_path}/.sentry-native/last_crash") as f:
         crash_timestamp = f.read()
     assert_timestamp(crash_timestamp)
 

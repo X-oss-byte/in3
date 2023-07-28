@@ -112,5 +112,5 @@ if __name__ == '__main__':
   for key in sorted(settings):
     value = settings[key]
     if isinstance(value, str):
-      value = '"%s"' % value
-    print('%s=%s' % (key, value))
+      value = f'"{value}"'
+    print(f'{key}={value}')

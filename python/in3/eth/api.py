@@ -55,11 +55,14 @@ class EthereumApi:
         Returns:
             block (Block): Desired block, if exists.
         """
-        serialized: dict = self._runtime.call(EthMethods.BLOCK_BY_HASH, self._factory.get_hash(block_hash),
-                                              get_full_block)
-        if not serialized:
+        if serialized := self._runtime.call(
+            EthMethods.BLOCK_BY_HASH,
+            self._factory.get_hash(block_hash),
+            get_full_block,
+        ):
+            return self._factory.get_block(serialized)
+        else:
             raise ClientException('Block not found or non-existent.')
-        return self._factory.get_block(serialized)
 
     def block_by_number(self, block_number: [int or str], get_full_block: bool = False) -> Block:
         """
@@ -76,10 +79,12 @@ class EthereumApi:
             block_number_str = block_number.lower()
         else:
             raise AssertionError('Block number must be an integer or in (`latest`, `earliest`, `pending`).')
-        serialized: dict = self._runtime.call(EthMethods.BLOCK_BY_NUMBER, block_number_str, bool(get_full_block))
-        if not serialized:
+        if serialized := self._runtime.call(
+            EthMethods.BLOCK_BY_NUMBER, block_number_str, get_full_block
+        ):
+            return self._factory.get_block(serialized)
+        else:
             raise ClientException('Block not found or non-existent.')
-        return self._factory.get_block(serialized)
 
     def transaction_by_hash(self, tx_hash: str) -> Transaction:
         """
@@ -90,10 +95,12 @@ class EthereumApi:
         Returns:
             transaction: Desired transaction, if exists.
         """
-        serialized: dict = self._runtime.call(EthMethods.TRANSACTION_BY_HASH, self._factory.get_hash(tx_hash))
-        if not serialized:
+        if serialized := self._runtime.call(
+            EthMethods.TRANSACTION_BY_HASH, self._factory.get_hash(tx_hash)
+        ):
+            return self._factory.get_transaction(serialized)
+        else:
             raise ClientException('Transaction not found or non-existent.')
-        return self._factory.get_transaction(serialized)
 
     def transaction_receipt(self, tx_hash: str) -> TransactionReceipt:
         """
@@ -108,7 +115,9 @@ class EthereumApi:
         Returns:
             tx_receipt: The mined Transaction data including event logs.
         """
-        serialized: dict = self._runtime.call(EthMethods.TRANSACTION_RECEIPT, self._factory.get_hash(tx_hash))
-        if not serialized:
+        if serialized := self._runtime.call(
+            EthMethods.TRANSACTION_RECEIPT, self._factory.get_hash(tx_hash)
+        ):
+            return self._factory.get_tx_receipt(serialized)
+        else:
             raise ClientException('Transaction not found or non-existent.')
-        return self._factory.get_tx_receipt(serialized)

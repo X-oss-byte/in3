@@ -8,12 +8,12 @@ import shutil
 
 class CMake:
     def __init__(self, factory):
-        self.runs = dict()
+        self.runs = {}
         self.factory = factory
 
     def compile(self, targets, options=None):
         if options is None:
-            options = dict()
+            options = {}
         key = (
             ";".join(targets),
             ";".join(f"{k}={v}" for k, v in options.items()),
@@ -36,7 +36,7 @@ class CMake:
             for i, d in enumerate(self.runs.values()):
                 # first merge the raw profiling runs
                 files = [f for f in os.listdir(d) if f.endswith(".profraw")]
-                if len(files) == 0:
+                if not files:
                     continue
                 cmd = [
                     "llvm-profdata",
@@ -45,7 +45,7 @@ class CMake:
                     "-o=sentry.profdata",
                     *files,
                 ]
-                print("{} > {}".format(d, " ".join(cmd)))
+                print(f'{d} > {" ".join(cmd)}')
                 subprocess.run(cmd, cwd=d)
 
                 # then export lcov from the profiling data, since this needs access
@@ -65,16 +65,15 @@ class CMake:
                 ]
                 lcov = os.path.join(coveragedir, f"run-{i}.lcov")
                 with open(lcov, "w") as lcov_file:
-                    print("{} > {} > {}".format(d, " ".join(cmd), lcov))
+                    print(f'{d} > {" ".join(cmd)} > {lcov}')
                     subprocess.run(cmd, stdout=lcov_file, cwd=d)
 
         if "kcov" in os.environ.get("RUN_ANALYZER", ""):
-            coverage_dirs = [
+            if coverage_dirs := [
                 d
                 for d in [d.joinpath("coverage") for d in self.runs.values()]
                 if d.exists()
-            ]
-            if len(coverage_dirs) > 0:
+            ]:
                 subprocess.run(
                     ["kcov", "--clean", "--merge", coveragedir, *coverage_dirs,]
                 )
@@ -93,9 +92,7 @@ def cmake(cwd, targets, options=None):
     )
     if os.environ.get("ANDROID_API") and os.environ.get("ANDROID_NDK"):
         # See: https://developer.android.com/ndk/guides/cmake
-        toolchain = "{}/ndk/{}/build/cmake/android.toolchain.cmake".format(
-            os.environ["ANDROID_HOME"], os.environ["ANDROID_NDK"]
-        )
+        toolchain = f'{os.environ["ANDROID_HOME"]}/ndk/{os.environ["ANDROID_NDK"]}/build/cmake/android.toolchain.cmake'
         options.update(
             {
                 "CMAKE_TOOLCHAIN_FILE": toolchain,
@@ -121,8 +118,7 @@ def cmake(cwd, targets, options=None):
         ]
 
     configcmd = cmake.copy()
-    for key, value in options.items():
-        configcmd.append("-D{}={}".format(key, value))
+    configcmd.extend(f"-D{key}={value}" for key, value in options.items())
     if sys.platform == "win32" and os.environ.get("TEST_X86"):
         configcmd.append("-AWin32")
     elif sys.platform == "linux" and os.environ.get("TEST_X86"):
@@ -140,7 +136,7 @@ def cmake(cwd, targets, options=None):
     if sys.platform == "win32":
         # MP = object level parallelism, WX = warnings as errors
         cpus = os.cpu_count()
-        cflags.append("/WX /MP{}".format(cpus))
+        cflags.append(f"/WX /MP{cpus}")
     if "gcc" in os.environ.get("RUN_ANALYZER", ""):
         cflags.append("-fanalyzer")
     if "llvm-cov" in os.environ.get("RUN_ANALYZER", ""):
@@ -148,7 +144,7 @@ def cmake(cwd, targets, options=None):
     env = dict(os.environ)
     env["CFLAGS"] = env["CXXFLAGS"] = " ".join(cflags)
 
-    print("\n{} > {}".format(cwd, " ".join(configcmd)), flush=True)
+    print(f'\n{cwd} > {" ".join(configcmd)}', flush=True)
     try:
         subprocess.run(configcmd, cwd=cwd, env=env, check=True)
     except subprocess.CalledProcessError:
@@ -170,7 +166,7 @@ def cmake(cwd, targets, options=None):
             " ".join(buildcmd),
         ]
 
-    print("{} > {}".format(cwd, " ".join(buildcmd)), flush=True)
+    print(f'{cwd} > {" ".join(buildcmd)}', flush=True)
     try:
         subprocess.run(buildcmd, cwd=cwd, check=True)
     except subprocess.CalledProcessError:
@@ -191,7 +187,7 @@ def cmake(cwd, targets, options=None):
             "cppcoreguidelines-avoid-magic-numbers",
             "readability-else-after-return",
         ]
-        disables = ["--disable={}".format(d) for d in disable]
+        disables = [f"--disable={d}" for d in disable]
         checkcmd = [
             "CodeChecker",
             "check",
@@ -209,7 +205,7 @@ def cmake(cwd, targets, options=None):
             "--logfile",
             "compilation.json",
         ]
-        print("{} > {}".format(cwd, " ".join(checkcmd)), flush=True)
+        print(f'{cwd} > {" ".join(checkcmd)}', flush=True)
         child = subprocess.run(checkcmd, stdout=subprocess.PIPE, cwd=cwd, check=True)
         sys.stdout.buffer.write(child.stdout)
         marker = b"Total number of reports: "
@@ -222,7 +218,7 @@ def cmake(cwd, targets, options=None):
         # copy the output to the android image via adb
         subprocess.run(
             [
-                "{}/platform-tools/adb".format(os.environ["ANDROID_HOME"]),
+                f'{os.environ["ANDROID_HOME"]}/platform-tools/adb',
                 "push",
                 "./",
                 "/data/local/tmp",
